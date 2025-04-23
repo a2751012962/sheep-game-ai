@@ -8,19 +8,11 @@ import sys
 # 添加当前目录到 Python 路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-
-try:
-    from policy import PolicyNetwork
-except ImportError as e:
-    print(f"Error importing PolicyNetwork: {str(e)}")
-    class PolicyNetwork:
-        def __init__(self, *args, **kwargs):
-            pass
-        def eval(self):
-            pass
+from policy import PolicyNetwork
 
 app = Flask(__name__)
-CORS(app)
+# 允许所有域名的跨域请求
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 加载模型
 try:

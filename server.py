@@ -3,9 +3,11 @@ from flask_cors import CORS
 import torch
 import numpy as np
 import os
+import sys
 
 # 添加当前目录到 Python 路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
 from policy import PolicyNetwork
 
 app = Flask(__name__)
@@ -15,9 +17,12 @@ CORS(app)
 model = PolicyNetwork(board_size=(8, 8), n_card_types=10, hidden_dim=128)
 try:
     checkpoint_path = os.path.join(current_dir, 'checkpoint.pt')
-    model.load_state_dict(torch.load(checkpoint_path))
-    model.eval()
-    print("Successfully loaded model checkpoint")
+    if os.path.exists(checkpoint_path):
+        model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
+        model.eval()
+        print("Successfully loaded model checkpoint")
+    else:
+        print("Warning: checkpoint.pt not found")
 except Exception as e:
     print(f"Warning: Could not load model checkpoint - {str(e)}")
 

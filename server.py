@@ -8,14 +8,23 @@ import sys
 # 添加当前目录到 Python 路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-from policy import PolicyNetwork
+
+try:
+    from policy import PolicyNetwork
+except ImportError as e:
+    print(f"Error importing PolicyNetwork: {str(e)}")
+    class PolicyNetwork:
+        def __init__(self, *args, **kwargs):
+            pass
+        def eval(self):
+            pass
 
 app = Flask(__name__)
 CORS(app)
 
 # 加载模型
-model = PolicyNetwork(board_size=(8, 8), n_card_types=10, hidden_dim=128)
 try:
+    model = PolicyNetwork(board_size=(8, 8), n_card_types=10, hidden_dim=128)
     checkpoint_path = os.path.join(current_dir, 'checkpoint.pt')
     if os.path.exists(checkpoint_path):
         model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
@@ -24,7 +33,8 @@ try:
     else:
         print("Warning: checkpoint.pt not found")
 except Exception as e:
-    print(f"Warning: Could not load model checkpoint - {str(e)}")
+    print(f"Warning: Could not load model - {str(e)}")
+    model = None
 
 @app.route('/', methods=['GET'])
 def home():
@@ -33,6 +43,11 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        if model is None:
+            return jsonify({
+                'error': 'Model not loaded'
+            }), 500
+            
         data = request.get_json()
         game_state = data.get('gameState', {})
         nodes = game_state.get('nodes', [])

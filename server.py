@@ -2,12 +2,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import torch
 import numpy as np
-import sys
 import os
 
 # 添加当前目录到 Python 路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
 from policy import PolicyNetwork
 
 app = Flask(__name__)
@@ -25,7 +23,7 @@ except Exception as e:
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({"message": "AI Helper Service is running"})
+    return jsonify({"status": "AI Helper Service is running"})
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -95,4 +93,6 @@ def generate_action(action_index, game_state):
     }
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    # 使用环境变量中的端口，如果没有则默认使用 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port) 
